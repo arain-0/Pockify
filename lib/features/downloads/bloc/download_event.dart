@@ -38,6 +38,24 @@ class CancelDownload extends DownloadEvent {
   List<Object?> get props => [downloadId];
 }
 
+class PauseDownload extends DownloadEvent {
+  final String downloadId;
+
+  const PauseDownload(this.downloadId);
+
+  @override
+  List<Object?> get props => [downloadId];
+}
+
+class ResumeDownload extends DownloadEvent {
+  final String downloadId;
+
+  const ResumeDownload(this.downloadId);
+
+  @override
+  List<Object?> get props => [downloadId];
+}
+
 class DeleteDownload extends DownloadEvent {
   final String downloadId;
   final bool deleteFile;

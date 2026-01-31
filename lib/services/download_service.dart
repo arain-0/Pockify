@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/video_model.dart';
@@ -27,11 +26,29 @@ class DownloadService {
 
   final StorageService _storageService = StorageService();
 
-  // Cobalt API endpoint - using current working endpoint
-  static const String _cobaltApiUrl = 'https://co.wuk.sh/api/json';
+  // Add multiple API endpoints with fallback
+  static const List<String> _apiEndpoints = [
+    'https://co.wuk.sh/api/json',
+    'https://api.cobalt.tools/api/json',
+  ];
 
   // Active downloads tracking
   final Map<String, CancelToken> _activeDownloads = {};
+
+  // Add retry logic
+  Future<T> _retryWithBackoff<T>(Future<T> Function() operation, {int maxAttempts = 3}) async {
+    int attempts = 0;
+    while (attempts < maxAttempts) {
+      try {
+        return await operation();
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxAttempts) rethrow;
+        await Future.delayed(Duration(seconds: attempts * 2));
+      }
+    }
+    throw Exception('Maksimum deneme sayısına ulaşıldı');
+  }
 
   /// Process a social media link and get video information
   Future<VideoModel?> processLink(String url) async {
@@ -42,85 +59,93 @@ class DownloadService {
     }
     print('DownloadService: Platform detected: ${platform.name}');
 
-    try {
-      print('DownloadService: Calling Cobalt API at $_cobaltApiUrl');
-      final response = await _dio.post(
-        _cobaltApiUrl,
-        data: {
-          'url': url,
-          'vCodec': 'h264',
-          'vQuality': '720',
-          'aFormat': 'mp3',
-          'filenamePattern': 'basic',
-          'isAudioOnly': false,
-          'twitterGif': false,
-          'tiktokH265': false,
-        },
-      );
-      print('DownloadService: API Response status: ${response.statusCode}');
-      print('DownloadService: API Response data: ${response.data}');
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-
-        if (data['status'] == 'error') {
-          throw Exception(data['text'] ?? 'Video bilgisi alınamadı');
-        }
-
-        if (data['status'] == 'redirect' || data['status'] == 'stream') {
-          final downloadUrl = data['url'] as String?;
-          if (downloadUrl == null) {
-            throw Exception('İndirme linki bulunamadı');
-          }
-
-          return VideoModel(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            url: url,
-            title: _extractTitle(url, platform),
-            thumbnail: data['thumb'] as String?,
-            downloadUrl: downloadUrl,
-            dateAdded: DateTime.now(),
-            platform: platform.name,
+    // Try each endpoint
+    for (final endpoint in _apiEndpoints) {
+      try {
+        return await _retryWithBackoff(() async {
+          print('DownloadService: Calling Cobalt API at $endpoint');
+          final response = await _dio.post(
+            endpoint,
+            data: {
+              'url': url,
+              'vCodec': 'h264',
+              'vQuality': '720',
+              'aFormat': 'mp3',
+              'filenamePattern': 'basic',
+              'isAudioOnly': false,
+              'twitterGif': false,
+              'tiktokH265': false,
+            },
           );
-        }
+          print('DownloadService: API Response status: ${response.statusCode}');
 
-        if (data['status'] == 'picker') {
-          // Multiple options available, use first video
-          final picker = data['picker'] as List?;
-          if (picker != null && picker.isNotEmpty) {
-            final firstOption = picker.first;
-            return VideoModel(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              url: url,
-              title: _extractTitle(url, platform),
-              thumbnail: firstOption['thumb'] as String?,
-              downloadUrl: firstOption['url'] as String,
-              dateAdded: DateTime.now(),
-              platform: platform.name,
-            );
+          if (response.statusCode == 200) {
+            final data = response.data;
+
+            if (data['status'] == 'error') {
+              throw Exception(data['text'] ?? 'Video bilgisi alınamadı');
+            }
+
+            if (data['status'] == 'redirect' || data['status'] == 'stream') {
+              final downloadUrl = data['url'] as String?;
+              if (downloadUrl == null) {
+                throw Exception('İndirme linki bulunamadı');
+              }
+
+              return VideoModel(
+                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                url: url,
+                title: _extractTitle(url, platform),
+                thumbnail: data['thumb'] as String?,
+                downloadUrl: downloadUrl,
+                dateAdded: DateTime.now(),
+                platform: platform.name,
+              );
+            }
+
+            if (data['status'] == 'picker') {
+              // Multiple options available, use first video
+              final picker = data['picker'] as List?;
+              if (picker != null && picker.isNotEmpty) {
+                final firstOption = picker.first;
+                return VideoModel(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  url: url,
+                  title: _extractTitle(url, platform),
+                  thumbnail: firstOption['thumb'] as String?,
+                  downloadUrl: firstOption['url'] as String,
+                  dateAdded: DateTime.now(),
+                  platform: platform.name,
+                );
+              }
+            }
+            throw Exception('Beklenmeyen API yanıtı');
           }
+          throw Exception('API hatası: ${response.statusCode}');
+        });
+      } catch (e) {
+        print('DownloadService: Error with endpoint $endpoint: $e');
+        // Continue to next endpoint if this one fails
+        if (endpoint == _apiEndpoints.last) {
+           if (e is DioException) {
+              if (e.type == DioExceptionType.connectionTimeout) {
+                throw Exception('Bağlantı zaman aşımına uğradı');
+              } else if (e.type == DioExceptionType.receiveTimeout) {
+                throw Exception('Yanıt zaman aşımına uğradı');
+              } else if (e.response != null) {
+                final errorData = e.response?.data;
+                if (errorData is Map && errorData['text'] != null) {
+                  throw Exception(errorData['text']);
+                }
+                throw Exception('Sunucu hatası: ${e.response?.statusCode}');
+              }
+              throw Exception('Bağlantı hatası: ${e.message}');
+           }
+           rethrow;
         }
-
-        throw Exception('Beklenmeyen API yanıtı');
       }
-
-      throw Exception('API hatası: ${response.statusCode}');
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
-        throw Exception('Bağlantı zaman aşımına uğradı');
-      } else if (e.type == DioExceptionType.receiveTimeout) {
-        throw Exception('Yanıt zaman aşımına uğradı');
-      } else if (e.response != null) {
-        final errorData = e.response?.data;
-        if (errorData is Map && errorData['text'] != null) {
-          throw Exception(errorData['text']);
-        }
-        throw Exception('Sunucu hatası: ${e.response?.statusCode}');
-      }
-      throw Exception('Bağlantı hatası: ${e.message}');
-    } catch (e) {
-      rethrow;
     }
+    throw Exception('Tüm sunuculara erişim başarısız oldu.');
   }
 
   /// Download video file to device storage
@@ -235,14 +260,28 @@ class DownloadService {
   /// Request storage permission
   Future<bool> _requestStoragePermission() async {
     if (Platform.isAndroid) {
-      // For Android 13+, use media permissions
-      if (await Permission.videos.request().isGranted) {
+      // Check for MANAGE_EXTERNAL_STORAGE for Android 11+ (API 30+)
+      // Note: This permission requires special app review on Play Store
+      if (await Permission.manageExternalStorage.isGranted) {
         return true;
       }
-      // For older Android versions
+
+      // For Android 13+ (API 33+), use media permissions
+      if (await Permission.videos.request().isGranted &&
+          await Permission.photos.request().isGranted) {
+        return true;
+      }
+
+      // For Android 10-12
       if (await Permission.storage.request().isGranted) {
         return true;
       }
+
+      // If we are here, we might need to request manage external storage
+      if (await Permission.manageExternalStorage.request().isGranted) {
+        return true;
+      }
+
       return false;
     } else if (Platform.isIOS) {
       // iOS doesn't need storage permission for app documents

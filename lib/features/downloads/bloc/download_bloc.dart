@@ -32,6 +32,8 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     on<ToggleItemSelection>(_onToggleItemSelection);
     on<SelectAllItems>(_onSelectAllItems);
     on<ClearSelection>(_onClearSelection);
+    on<PauseDownload>(_onPauseDownload);
+    on<ResumeDownload>(_onResumeDownload);
   }
 
   void _onLoadDownloads(LoadDownloads event, Emitter<DownloadState> emit) {
@@ -56,6 +58,14 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     StartDownload event,
     Emitter<DownloadState> emit,
   ) async {
+    // Check concurrent download limit
+    if (state.activeDownloads.length >= 2) {
+       emit(state.copyWith(
+        error: 'Aynı anda en fazla 2 video indirebilirsiniz.',
+      ));
+      return;
+    }
+
     // Check daily limit for free users
     if (!await _purchaseService.canDownload()) {
       emit(state.copyWith(
@@ -78,21 +88,23 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       }
 
       // Start download with progress tracking
-      final download = await _downloadService.downloadFile(
+      _downloadService.downloadFile(
         video,
         isPremium: _purchaseService.isPremium,
         onProgress: (received, total) {
           final progress = (received / total * 100).round();
           add(UpdateDownloadProgress(video.id, progress));
         },
-      );
+      ).then((_) {
+         // Increment download count and show ad if needed
+         _purchaseService.incrementDownloadCount();
+         _adService.onDownloadComplete();
+         add(LoadDownloads());
+      }).catchError((e) {
+          add(LoadDownloads());
+      });
 
-      // Increment download count and show ad if needed
-      await _purchaseService.incrementDownloadCount();
-      _adService.onDownloadComplete();
-
-      // Reload downloads
-      add(LoadDownloads());
+      emit(state.copyWith(isLoading: false));
     } catch (e) {
       emit(state.copyWith(
         isLoading: false,
@@ -208,5 +220,19 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
 
   void _onClearSelection(ClearSelection event, Emitter<DownloadState> emit) {
     emit(state.copyWith(selectedIds: {}));
+  }
+
+  void _onPauseDownload(PauseDownload event, Emitter<DownloadState> emit) {
+    _downloadService.cancelDownload(event.downloadId);
+    add(LoadDownloads());
+  }
+
+  void _onResumeDownload(ResumeDownload event, Emitter<DownloadState> emit) {
+    try {
+      final download = state.downloads.firstWhere((d) => d.id == event.downloadId);
+      add(StartDownload(download.videoModel.url));
+    } catch (e) {
+      // Handle error if download not found
+    }
   }
 }

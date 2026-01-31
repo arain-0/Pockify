@@ -10,15 +10,18 @@ class AdService {
   static const String _testBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
   static const String _testInterstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
   static const String _testRewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
+  static const String _testNativeAdUnitId = 'ca-app-pub-3940256099942544/2247696110';
 
   // Production Ad Unit IDs - TODO: Replace with real IDs
   static const String _prodBannerAdUnitId = 'ca-app-pub-XXXXX/XXXXX';
   static const String _prodInterstitialAdUnitId = 'ca-app-pub-XXXXX/XXXXX';
   static const String _prodRewardedAdUnitId = 'ca-app-pub-XXXXX/XXXXX';
+  static const String _prodNativeAdUnitId = 'ca-app-pub-XXXXX/XXXXX';
 
   String get bannerAdUnitId => kDebugMode ? _testBannerAdUnitId : _prodBannerAdUnitId;
   String get interstitialAdUnitId => kDebugMode ? _testInterstitialAdUnitId : _prodInterstitialAdUnitId;
   String get rewardedAdUnitId => kDebugMode ? _testRewardedAdUnitId : _prodRewardedAdUnitId;
+  String get nativeAdUnitId => kDebugMode ? _testNativeAdUnitId : _prodNativeAdUnitId;
 
   InterstitialAd? _interstitialAd;
   RewardedAd? _rewardedAd;
@@ -36,6 +39,27 @@ class AdService {
 
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
+
+    // Request consent info update (EU)
+    final params = ConsentRequestParameters();
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      params,
+      () async {
+        if (await ConsentInformation.instance.isConsentFormAvailable()) {
+          ConsentForm.loadAndShowConsentFormIfRequired(
+            (error) {
+              if (error != null) {
+                debugPrint('Consent form error: ${error.message}');
+              }
+            },
+          );
+        }
+      },
+      (error) {
+        debugPrint('Consent info update error: ${error.message}');
+      },
+    );
+
     _loadInterstitialAd();
     _loadRewardedAd();
   }
@@ -98,6 +122,27 @@ class AdService {
     } else {
       onAdClosed?.call();
     }
+  }
+
+  // Native Ad
+  void loadNativeAd({
+    required Function(NativeAd) onAdLoaded,
+    required Function(Ad, LoadAdError) onAdFailedToLoad,
+  }) {
+    NativeAd(
+      adUnitId: nativeAdUnitId,
+      factoryId: 'listTile', // Ensure this factoryId is registered in native code
+      request: const AdRequest(),
+      listener: NativeAdListener(
+        onAdLoaded: (ad) {
+          onAdLoaded(ad as NativeAd);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          onAdFailedToLoad(ad, error);
+        },
+      ),
+    ).load();
   }
 
   // Rewarded Ad

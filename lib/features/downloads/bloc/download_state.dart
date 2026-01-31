@@ -16,6 +16,7 @@ class DownloadState extends Equatable {
   final bool isSelectionMode;
   final Set<String> selectedIds;
   final Map<String, int> downloadProgress;
+  final Map<String, Stream<int>> progressStreams;
   final VideoModel? previewVideo; // Video preview before download
 
   const DownloadState({
@@ -30,6 +31,7 @@ class DownloadState extends Equatable {
     this.isSelectionMode = false,
     this.selectedIds = const {},
     this.downloadProgress = const {},
+    this.progressStreams = const {},
     this.previewVideo,
   });
 
@@ -56,6 +58,7 @@ class DownloadState extends Equatable {
     bool? isSelectionMode,
     Set<String>? selectedIds,
     Map<String, int>? downloadProgress,
+    Map<String, Stream<int>>? progressStreams,
     VideoModel? previewVideo,
     bool clearPreview = false,
     bool clearError = false,
@@ -72,6 +75,7 @@ class DownloadState extends Equatable {
       isSelectionMode: isSelectionMode ?? this.isSelectionMode,
       selectedIds: selectedIds ?? this.selectedIds,
       downloadProgress: downloadProgress ?? this.downloadProgress,
+      progressStreams: progressStreams ?? this.progressStreams,
       previewVideo: clearPreview ? null : (previewVideo ?? this.previewVideo),
     );
   }
@@ -89,6 +93,7 @@ class DownloadState extends Equatable {
         isSelectionMode,
         selectedIds,
         downloadProgress,
+        progressStreams,
         previewVideo,
       ];
 }

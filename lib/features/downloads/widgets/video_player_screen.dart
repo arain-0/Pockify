@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../services/storage_service.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final String videoPath;
@@ -24,6 +25,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   ChewieController? _chewieController;
   bool _isInitialized = false;
   String? _error;
+  final StorageService _storageService = StorageService();
 
   @override
   void initState() {
@@ -36,6 +38,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _videoPlayerController = VideoPlayerController.file(File(widget.videoPath));
       await _videoPlayerController.initialize();
 
+      // Restore position
+      final savedPosition = _storageService.getValue<int>('pos_${widget.videoPath}');
+      if (savedPosition != null) {
+        await _videoPlayerController.seekTo(Duration(milliseconds: savedPosition));
+      }
+
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController,
         autoPlay: true,
@@ -43,7 +51,22 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         allowFullScreen: true,
         allowMuting: true,
         showControls: true,
-        showOptions: false,
+        showOptions: true,
+        allowPlaybackSpeedChanging: true,
+        additionalOptions: (context) {
+          return [
+            OptionItem(
+              onTap: () {
+                Navigator.pop(context); // Close options menu
+                final isLooping = _videoPlayerController.value.isLooping;
+                _videoPlayerController.setLooping(!isLooping);
+                // Force rebuild to update icon if possible, or just rely on next open
+              },
+              iconData: Icons.repeat,
+              title: 'Döngü (Aç/Kapa)',
+            ),
+          ];
+        },
         materialProgressColors: ChewieProgressColors(
           playedColor: AppColors.primary,
           handleColor: AppColors.primary,
@@ -103,6 +126,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
+    // Save position
+    if (_isInitialized && _videoPlayerController.value.isInitialized) {
+      _storageService.setValue('pos_${widget.videoPath}', _videoPlayerController.value.position.inMilliseconds);
+    }
     _videoPlayerController.dispose();
     _chewieController?.dispose();
     // Keep all orientations enabled for tablet support
