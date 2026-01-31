@@ -27,9 +27,11 @@ class DownloadService {
   final StorageService _storageService = StorageService();
 
   // Add multiple API endpoints with fallback
+  // Updated Cobalt API endpoints - using various public instances
   static const List<String> _apiEndpoints = [
-    'https://co.wuk.sh/api/json',
-    'https://api.cobalt.tools/api/json',
+    'https://cobalt-api.kwiatekmiki.com/api/json',
+    'https://cobalt.api.timelessnesses.me/api/json', 
+    'https://api.cobalt.best/api/json',
   ];
 
   // Active downloads tracking

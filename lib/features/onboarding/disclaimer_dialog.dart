@@ -32,111 +32,115 @@ class DisclaimerDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return Dialog(
       backgroundColor: AppColors.cardDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
-      contentPadding: EdgeInsets.zero,
-      content: Container(
-        width: double.maxFinite,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.shield_outlined,
+                  color: AppColors.primary,
+                  size: 32,
+                ),
               ),
-              child: const Icon(
-                Icons.shield_outlined,
-                color: AppColors.primary,
-                size: 32,
+              const SizedBox(height: 20),
+              // Title
+              const Text(
+                'Önemli Bilgilendirme',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 20),
-            // Title
-            const Text(
-              'Onemli Bilgilendirme',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              // Content
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceDark,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pockify, kullanıcıların kendi içeriklerini veya izin aldıkları içerikleri yönetmeleri için tasarlanmıştır.',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    _WarningItem(
+                      text: 'Telif hakkı olan içeriklerin izinsiz indirilmesi ve dağıtılması yasaktır.',
+                    ),
+                    SizedBox(height: 12),
+                    _WarningItem(
+                      text: 'Bu uygulama TikTok, Instagram veya herhangi bir sosyal medya platformuyla bağlantılı değildir.',
+                    ),
+                    SizedBox(height: 12),
+                    _WarningItem(
+                      text: 'İçeriklerin yasal kullanımından tamamen kullanıcı sorumludur.',
+                    ),
+                  ],
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            // Content
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceDark,
-                borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 16),
+              // Terms text
+              Text(
+                'Devam ederek Kullanım Şartlarını ve Gizlilik Politikasını kabul etmiş olursunuz.',
+                style: TextStyle(
+                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pockify, kullanicilarin kendi iceriklerini veya izin aldiklari icerikleri yonetmeleri icin tasarlanmistir.',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      height: 1.5,
+              const SizedBox(height: 20),
+              // Accept button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: onAccept,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  SizedBox(height: 16),
-                  _WarningItem(
-                    text: 'Telif hakki olan iceriklerin izinsiz indirilmesi ve dagitilmasi yasaktir.',
-                  ),
-                  SizedBox(height: 12),
-                  _WarningItem(
-                    text: 'Bu uygulama TikTok, Instagram veya herhangi bir sosyal medya platformuyla baglantili degildir.',
-                  ),
-                  SizedBox(height: 12),
-                  _WarningItem(
-                    text: 'Iceriklerin yasal kullanimindan tamamen kullanici sorumludur.',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Terms text
-            Text(
-              'Devam ederek Kullanim Sartlarini ve Gizlilik Politikasini kabul etmis olursunuz.',
-              style: TextStyle(
-                color: AppColors.textSecondary.withValues(alpha: 0.8),
-                fontSize: 12,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            // Accept button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: onAccept,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Kabul Ediyorum',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  child: const Text(
+                    'Kabul Ediyorum',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -48,21 +48,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildNavItem(0, Icons.home_rounded, 'Ana Sayfa'),
-                    _buildNavItem(
+                    Expanded(child: _buildNavItem(0, Icons.home_rounded, 'Ana')),
+                    Expanded(child: _buildNavItem(
                       1,
                       Icons.download_rounded,
-                      'Indirilenler',
+                      'İndirme',
                       badge: state.activeDownloads.isNotEmpty
                           ? state.activeDownloads.length.toString()
                           : null,
-                    ),
-                    _buildNavItem(2, Icons.workspace_premium, 'Premium'),
-                    _buildNavItem(3, Icons.settings_rounded, 'Ayarlar'),
+                    )),
+                    Expanded(child: _buildNavItem(2, Icons.workspace_premium, 'Premium')),
+                    Expanded(child: _buildNavItem(3, Icons.settings_rounded, 'Ayarlar')),
                   ],
                 ),
               ),
@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.15)
@@ -102,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Stack(
               clipBehavior: Clip.none,
