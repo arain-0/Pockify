@@ -15,6 +15,7 @@ import 'features/downloads/bloc/download_bloc.dart';
 import 'features/downloads/bloc/download_event.dart';
 import 'models/video_model.dart';
 import 'models/download_model.dart';
+import 'core/theme/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +48,10 @@ void main() async {
   final storageService = StorageService();
   await storageService.init();
 
+  // Load theme
+  final themeStr = storageService.getValue<String>('app_theme') ?? 'dark';
+  ThemeProvider.setTheme(themeStr);
+
   final adService = AdService();
   await adService.initialize();
 
@@ -67,13 +72,18 @@ class PockifyApp extends StatelessWidget {
           create: (context) => DownloadBloc()..add(LoadDownloads()),
         ),
       ],
-      child: MaterialApp(
-        title: 'Pockify',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-        home: const AppWrapper(),
+      child: ValueListenableBuilder<ThemeMode>(
+        valueListenable: ThemeProvider.themeNotifier,
+        builder: (context, themeMode, _) {
+          return MaterialApp(
+            title: 'Pockify',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            home: const AppWrapper(),
+          );
+        },
       ),
     );
   }

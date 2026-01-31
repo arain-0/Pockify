@@ -100,6 +100,9 @@ class PurchaseService {
     // Load saved premium status
     _isPremium = _storageService.getValue<bool>('is_premium') ?? false;
 
+    // Check subscription expiry
+    await _checkSubscriptionExpiry();
+
     // Listen to purchase updates
     _subscription = _inAppPurchase.purchaseStream.listen(
       _onPurchaseUpdate,
@@ -245,25 +248,74 @@ class PurchaseService {
   }
 
   Future<void> _verifyAndDeliverPurchase(PurchaseDetails purchaseDetails) async {
-    // TODO: Verify purchase with your backend server for security
-    // For now, we trust the local verification
+    // Client-side verification for MVP
+    // In production, you should verify the receipt with your backend
 
-    _isPremium = true;
-    await _storageService.setValue('is_premium', true);
-    await _storageService.setValue(
-      'purchase_date',
-      DateTime.now().toIso8601String(),
-    );
-    await _storageService.setValue(
-      'product_id',
-      purchaseDetails.productID,
-    );
+    if (purchaseDetails.status == PurchaseStatus.purchased ||
+        purchaseDetails.status == PurchaseStatus.restored) {
 
-    final status = purchaseDetails.status == PurchaseStatus.restored
-        ? AppPurchaseStatus.restored
-        : AppPurchaseStatus.purchased;
+      _isPremium = true;
+      await _storageService.setValue('is_premium', true);
 
-    onPurchaseStatusChanged?.call(status, null);
+      // Save purchase details for expiry check
+      await _storageService.setValue(
+        'purchase_date',
+        DateTime.now().toIso8601String(),
+      );
+      await _storageService.setValue(
+        'product_id',
+        purchaseDetails.productID,
+      );
+
+      // Save transaction ID if available
+      if (purchaseDetails.purchaseID != null) {
+        await _storageService.setValue('transaction_id', purchaseDetails.purchaseID!);
+      }
+
+      final status = purchaseDetails.status == PurchaseStatus.restored
+          ? AppPurchaseStatus.restored
+          : AppPurchaseStatus.purchased;
+
+      onPurchaseStatusChanged?.call(status, null);
+    }
+  }
+
+  Future<void> _checkSubscriptionExpiry() async {
+    if (!_isPremium) return;
+
+    final purchaseDateStr = _storageService.getValue<String>('purchase_date');
+    final productId = _storageService.getValue<String>('product_id');
+
+    if (purchaseDateStr == null || productId == null) return;
+
+    // Lifetime never expires
+    if (productId == lifetimeProductId) return;
+
+    try {
+      final purchaseDate = DateTime.parse(purchaseDateStr);
+      final now = DateTime.now();
+      Duration? duration;
+
+      if (productId == weeklyProductId) {
+        duration = const Duration(days: 7);
+      } else if (productId == monthlyProductId) {
+        duration = const Duration(days: 30);
+      } else if (productId == yearlyProductId) {
+        duration = const Duration(days: 365);
+      }
+
+      if (duration != null) {
+        // Add a grace period of 3 days
+        if (now.difference(purchaseDate) > duration + const Duration(days: 3)) {
+          // Expired
+          _isPremium = false;
+          await _storageService.setValue('is_premium', false);
+          debugPrint('Subscription expired');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking subscription expiry: $e');
+    }
   }
 
   // Check if user has exceeded daily limit (for free users)

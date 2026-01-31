@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import '../models/download_model.dart';
 
 class StorageService {
   static final StorageService _instance = StorageService._internal();
@@ -9,22 +10,36 @@ class StorageService {
   static const String downloadsBox = 'downloads';
 
   Box? _settingsBox;
-  Box? _downloadsBox;
+  Box<DownloadModel>? _downloadsBox;
+  bool _isInitialized = false;
 
   Future<void> init() async {
-    _settingsBox = await Hive.openBox(settingsBox);
-    _downloadsBox = await Hive.openBox(downloadsBox);
+    if (_isInitialized) return;
+
+    try {
+      _settingsBox = await Hive.openBox(settingsBox);
+      _downloadsBox = await Hive.openBox<DownloadModel>(downloadsBox);
+      _isInitialized = true;
+    } catch (e) {
+      // Handle corrupted storage
+      await Hive.deleteBoxFromDisk(settingsBox);
+      await Hive.deleteBoxFromDisk(downloadsBox);
+      _settingsBox = await Hive.openBox(settingsBox);
+      _downloadsBox = await Hive.openBox<DownloadModel>(downloadsBox);
+      _isInitialized = true;
+    }
   }
 
   // Generic get/put methods
   dynamic get(String boxName, String key, {dynamic defaultValue}) {
-    var box = Hive.box(boxName);
-    return box.get(key, defaultValue: defaultValue);
+    if (!_isInitialized) return defaultValue;
+    if (boxName == settingsBox) return _settingsBox?.get(key, defaultValue: defaultValue);
+    return null;
   }
 
   Future<void> put(String boxName, String key, dynamic value) async {
-    var box = Hive.box(boxName);
-    await box.put(key, value);
+    if (!_isInitialized) return;
+    if (boxName == settingsBox) await _settingsBox?.put(key, value);
   }
 
   // Settings methods
@@ -38,30 +53,33 @@ class StorageService {
 
   // Generic box methods
   Box<T>? getBox<T>(String boxName) {
-    try {
-      return Hive.box<T>(boxName);
-    } catch (_) {
-      return null;
+    if (boxName == downloadsBox) {
+      return _downloadsBox as Box<T>?;
     }
+    return null;
   }
 
   List<T> getAll<T>(String boxName) {
-    try {
-      final box = Hive.box<T>(boxName);
-      return box.values.toList();
-    } catch (_) {
-      return [];
+    if (boxName == downloadsBox && _downloadsBox != null) {
+      return _downloadsBox!.values.toList().cast<T>();
     }
+    return [];
   }
 
   Future<void> delete(String boxName, String key) async {
-    var box = Hive.box(boxName);
-    await box.delete(key);
+     if (boxName == downloadsBox) {
+       await _downloadsBox?.delete(key);
+     } else if (boxName == settingsBox) {
+       await _settingsBox?.delete(key);
+     }
   }
 
   Future<void> clearBox(String boxName) async {
-    var box = Hive.box(boxName);
-    await box.clear();
+    if (boxName == downloadsBox) {
+       await _downloadsBox?.clear();
+     } else if (boxName == settingsBox) {
+       await _settingsBox?.clear();
+     }
   }
 
   Future<void> clearAll() async {

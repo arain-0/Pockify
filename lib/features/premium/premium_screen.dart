@@ -48,6 +48,8 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPremium = _purchaseService.isPremium;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
@@ -57,17 +59,53 @@ class _PremiumScreenState extends State<PremiumScreen> {
               _buildHeader(),
               _buildFeaturesList(),
               const SizedBox(height: 24),
-              _buildPlanCards(),
-              const SizedBox(height: 24),
-              _buildPurchaseButton(),
-              const SizedBox(height: 16),
-              _buildRestoreButton(),
-              const SizedBox(height: 32),
-              _buildTermsText(),
-              const SizedBox(height: 24),
+              if (isPremium)
+                _buildAlreadyPremiumView()
+              else ...[
+                _buildPlanCards(),
+                const SizedBox(height: 24),
+                _buildPurchaseButton(),
+                const SizedBox(height: 16),
+                _buildRestoreButton(),
+                const SizedBox(height: 32),
+                _buildTermsText(),
+                const SizedBox(height: 24),
+              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAlreadyPremiumView() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            color: AppColors.success,
+            size: 64,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Zaten Premium Üyesiniz!',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tüm özelliklerin keyfini çıkarın.',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 16,
+            ),
+          ),
+        ],
       ),
     );
   }

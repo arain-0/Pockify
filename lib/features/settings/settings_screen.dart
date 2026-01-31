@@ -6,6 +6,7 @@ import '../../core/constants/app_constants.dart';
 import '../../services/storage_service.dart';
 import '../../services/purchase_service.dart';
 import '../../core/utils/file_helper.dart';
+import '../../core/theme/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -440,6 +441,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () {
                 setState(() => _theme = themeOption['key']!);
                 _storageService.setValue('app_theme', themeOption['key']);
+                ThemeProvider.setTheme(themeOption['key']!);
                 Navigator.pop(context);
               },
             );
@@ -471,6 +473,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () async {
               await _fileHelper.clearAllDownloads();
               await _storageService.clearAll();
+              if (!mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

@@ -21,7 +21,9 @@ class DisclaimerDialog extends StatelessWidget {
         builder: (context) => DisclaimerDialog(
           onAccept: () async {
             await storageService.setValue('disclaimer_accepted', true);
-            Navigator.of(context).pop();
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
           },
         ),
       );
