@@ -7,7 +7,7 @@ Save your favorite social media content. Access anytime.
 ## Preview
 
 <p align="center">
-  <img src="screenshots/preview.png" width="600" />
+  <img src="screenshots/preview.png" width="280" />
 </p>
 
 ## Features
