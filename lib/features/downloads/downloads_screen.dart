@@ -74,7 +74,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             context.read<DownloadBloc>().add(ToggleSelectionMode());
           },
         ),
-        title: Text('${state.selectedCount} secildi'),
+        title: Text('${state.selectedCount} seçildi'),
         actions: [
           IconButton(
             icon: const Icon(Icons.select_all),
@@ -89,7 +89,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     return AppBar(
       backgroundColor: Colors.transparent,
       title: const Text(
-        'Indirilenler',
+        'Koleksiyonum',
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
@@ -125,7 +125,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             controller: _searchController,
             style: const TextStyle(color: AppColors.textPrimary),
             decoration: InputDecoration(
-              hintText: 'Videolarda ara...',
+              hintText: 'İçeriklerde ara...',
               hintStyle: const TextStyle(color: AppColors.textSecondary),
               prefixIcon:
                   const Icon(Icons.search, color: AppColors.textSecondary),
@@ -160,7 +160,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               children: [
                 _buildFilterChip(
                   context,
-                  'Tumu',
+                  'Tümü',
                   state.platformFilter == null,
                   () => context
                       .read<DownloadBloc>()
@@ -183,6 +183,24 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                   () => context
                       .read<DownloadBloc>()
                       .add(const FilterDownloads('instagram')),
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  context,
+                  'Facebook',
+                  state.platformFilter == 'facebook',
+                  () => context
+                      .read<DownloadBloc>()
+                      .add(const FilterDownloads('facebook')),
+                ),
+                const SizedBox(width: 8),
+                _buildFilterChip(
+                  context,
+                  'Twitter',
+                  state.platformFilter == 'twitter',
+                  () => context
+                      .read<DownloadBloc>()
+                      .add(const FilterDownloads('twitter')),
                 ),
               ],
             ),
@@ -226,13 +244,13 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.download_outlined,
+            Icons.bookmark_outline,
             size: 80,
             color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           const Text(
-            'Henuz indirilen video yok',
+            'Koleksiyonunuz boş',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -241,7 +259,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Video linkini yapistirarak indirmeye baslayin',
+            'Link yapıştırarak içerik kaydetmeye başlayın',
             style: TextStyle(
               color: AppColors.textSecondary,
             ),
@@ -609,7 +627,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                         children: [
                           Icon(Icons.share, color: AppColors.textPrimary),
                           SizedBox(width: 12),
-                          Text('Paylas', style: TextStyle(color: AppColors.textPrimary)),
+                          Text('Paylaş', style: TextStyle(color: AppColors.textPrimary)),
                         ],
                       ),
                     ),
@@ -689,7 +707,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         children: [
           _buildActionButton(
             icon: Icons.share,
-            label: 'Paylas',
+            label: 'Paylaş',
             onTap: () => _shareSelected(context, state),
           ),
           _buildActionButton(
@@ -731,6 +749,12 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         return const Color(0xFF000000);
       case 'instagram':
         return const Color(0xFFE1306C);
+      case 'facebook':
+        return const Color(0xFF1877F2);
+      case 'twitter':
+        return const Color(0xFF1DA1F2);
+      case 'youtube':
+        return const Color(0xFFFF0000);
       default:
         return AppColors.primary;
     }
@@ -780,17 +804,17 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardDark,
         title: const Text(
-          'Videoyu Sil',
+          'İçeriği Sil',
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: const Text(
-          'Bu videoyu silmek istediginizden emin misiniz?',
+          'Bu içeriği silmek istediğinizden emin misiniz?',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Iptal'),
+            child: const Text('İptal'),
           ),
           TextButton(
             onPressed: () {
@@ -824,17 +848,17 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardDark,
         title: const Text(
-          'Secilenleri Sil',
+          'Seçilenleri Sil',
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: Text(
-          '${state.selectedCount} videoyu silmek istediginizden emin misiniz?',
+          '${state.selectedCount} içeriği silmek istediğinizden emin misiniz?',
           style: const TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Iptal'),
+            child: const Text('İptal'),
           ),
           TextButton(
             onPressed: () {

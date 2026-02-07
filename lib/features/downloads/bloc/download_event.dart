@@ -120,3 +120,5 @@ class ToggleItemSelection extends DownloadEvent {
 class SelectAllItems extends DownloadEvent {}
 
 class ClearSelection extends DownloadEvent {}
+
+class ClearError extends DownloadEvent {}

@@ -1,6 +1,6 @@
 class AppConstants {
   static const String appName = 'Pockify';
-  static const String appSlogan = 'Cebine Al, Her Yerde Izle';
+  static const String appSlogan = 'Favori İçeriklerini Yönet';
   static const String appVersion = '1.0.0';
 
   // Storage Keys

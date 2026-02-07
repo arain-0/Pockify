@@ -47,7 +47,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (!mounted) return;
 
       final platform = LinkParser.parse(data.text!);
-      final platformName = platform == SocialPlatform.tiktok ? 'TikTok' : 'Instagram';
+      final platformName = LinkParser.getDisplayName(platform);
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +89,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     // Validate the link
     if (!LinkParser.isValidUrl(link)) {
       _showSnackBar(
-        'Geçersiz link. Lütfen TikTok veya Instagram linki girin.',
+        'Geçersiz link. YouTube, TikTok, Instagram veya Twitter linki girin.',
         isError: true,
       );
       return;
@@ -97,12 +97,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
     // Start download via Bloc
     context.read<DownloadBloc>().add(StartDownload(link));
-    
+
     // Show feedback
     final platform = LinkParser.parse(link);
-    final platformName = platform == SocialPlatform.tiktok ? 'TikTok' : 'Instagram';
+    final platformName = LinkParser.getDisplayName(platform);
     _showSnackBar(
-      '$platformName videosu indiriliyor...',
+      '$platformName içeriği kaydediliyor...',
       isError: false,
       showAction: true,
     );
@@ -122,7 +122,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: showAction
             ? SnackBarAction(
-                label: 'İndirilenler',
+                label: 'Koleksiyon',
                 textColor: Colors.white,
                 onPressed: () {
                   // Navigate to downloads tab (index 1)
@@ -134,13 +134,46 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildPlatformChip(String platform) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.check_circle, color: AppColors.success, size: 14),
+        const SizedBox(width: 4),
+        Text(
+          platform,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<DownloadBloc, DownloadState>(
+      listenWhen: (previous, current) {
+        // Only listen when error changes from null to a non-null value
+        // and they are different errors
+        if (previous.error == null && current.error != null) {
+          return true;
+        }
+        // Also trigger if error changed to a different error
+        if (previous.error != null && current.error != null && previous.error != current.error) {
+          return true;
+        }
+        return false;
+      },
       listener: (context, state) {
         // Show error message if download fails
         if (state.error != null) {
-          _showSnackBar(state.error!, isError: true);
+          // Store the error message before clearing
+          final errorMessage = state.error!;
+
+          // Clear error immediately to prevent re-triggering
+          context.read<DownloadBloc>().add(ClearError());
+
+          // Show the snackbar with the stored message
+          _showSnackBar(errorMessage, isError: true);
         }
       },
       child: Scaffold(
@@ -180,7 +213,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     
                     const SizedBox(height: 12),
                     Text(
-                      'İstediğini İndir. Çevrimdışı İzle.',
+                      'Favori İçeriklerini Kaydet. Her Zaman Eriş.',
                       style: AppTypography.textTheme.bodyLarge?.copyWith(
                         color: AppColors.textSecondary,
                         letterSpacing: 0.5,
@@ -209,7 +242,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 textAlign: TextAlign.center,
                                 enabled: !isDownloading,
                                 decoration: InputDecoration(
-                                  hintText: 'TikTok veya Instagram Linki Yapıştır',
+                                  hintText: 'Video Linkini Yapıştır',
                                   hintStyle: TextStyle(color: Colors.grey.shade600),
                                   border: InputBorder.none,
                                   enabledBorder: InputBorder.none,
@@ -223,33 +256,59 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                   }
                                 },
                               ),
-                              // Action Button
+                              // Action Button with Progress
                               if (isDownloading)
-                                Container(
-                                  height: 50,
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: AppColors.primary,
-                                          strokeWidth: 2,
-                                        ),
+                                Builder(
+                                  builder: (context) {
+                                    // Get progress from any active download
+                                    final progress = state.downloadProgress.isNotEmpty
+                                        ? state.downloadProgress.values.last
+                                        : 0;
+
+                                    return Container(
+                                      height: 50,
+                                      width: double.infinity,
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: CircularProgressIndicator(
+                                                  value: progress > 0 ? progress / 100 : null,
+                                                  color: AppColors.primary,
+                                                  strokeWidth: 2,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                progress > 0
+                                                    ? 'Kaydediliyor... %$progress'
+                                                    : 'İçerik bilgisi alınıyor...',
+                                                style: TextStyle(
+                                                  color: AppColors.textSecondary,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (progress > 0)
+                                            Padding(
+                                              padding: const EdgeInsets.only(top: 4),
+                                              child: LinearProgressIndicator(
+                                                value: progress / 100,
+                                                backgroundColor: AppColors.surfaceDark,
+                                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                                minHeight: 3,
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'İndiriliyor...',
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    );
+                                  },
                                 )
                               else
                                 SizedBox(
@@ -266,7 +325,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                       elevation: 0,
                                     ),
                                     child: const Text(
-                                      'YAPIŞTIR VE İNDİR',
+                                      'YAPIŞTIR VE KAYDET',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -284,22 +343,15 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                     const SizedBox(height: 16),
                     
                     // Supported platforms hint
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 8,
                       children: [
-                        Icon(Icons.check_circle, color: AppColors.success, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          'TikTok',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(Icons.check_circle, color: AppColors.success, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Instagram',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                        ),
+                        _buildPlatformChip('YouTube'),
+                        _buildPlatformChip('TikTok'),
+                        _buildPlatformChip('Instagram'),
+                        _buildPlatformChip('Twitter'),
                       ],
                     ).animate().fadeIn(delay: 900.ms),
                     

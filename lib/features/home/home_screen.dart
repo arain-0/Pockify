@@ -52,11 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Expanded(child: _buildNavItem(0, Icons.home_rounded, 'Ana')),
+                    Expanded(child: _buildNavItem(0, Icons.home_rounded, 'Ana Sayfa')),
                     Expanded(child: _buildNavItem(
                       1,
-                      Icons.download_rounded,
-                      'İndirme',
+                      Icons.bookmark_rounded,
+                      'Koleksiyon',
                       badge: state.activeDownloads.isNotEmpty
                           ? state.activeDownloads.length.toString()
                           : null,

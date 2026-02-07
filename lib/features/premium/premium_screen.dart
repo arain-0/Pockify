@@ -156,7 +156,7 @@ class _PremiumScreenState extends State<PremiumScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Sinir tanimayan indirme deneyimi',
+            'Sınırsız içerik yönetimi deneyimi',
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 16,
@@ -169,13 +169,13 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   Widget _buildFeaturesList() {
     final features = [
-      {'icon': Icons.all_inclusive, 'text': 'Sinirsiz indirme'},
+      {'icon': Icons.all_inclusive, 'text': 'Sınırsız kaydetme'},
       {'icon': Icons.hd, 'text': '1080p / 4K kalite'},
-      {'icon': Icons.block, 'text': 'Reklamsiz deneyim'},
-      {'icon': Icons.music_note, 'text': 'MP3 olarak ses indirme'},
-      {'icon': Icons.folder_special, 'text': 'Gizli klasor (sifreli)'},
+      {'icon': Icons.block, 'text': 'Reklamsız deneyim'},
+      {'icon': Icons.music_note, 'text': 'MP3 olarak ses kaydetme'},
+      {'icon': Icons.folder_special, 'text': 'Gizli klasör (şifreli)'},
       {'icon': Icons.cloud_upload, 'text': 'Bulut yedekleme'},
-      {'icon': Icons.support_agent, 'text': 'Oncelikli destek'},
+      {'icon': Icons.support_agent, 'text': 'Öncelikli destek'},
     ];
 
     return Container(

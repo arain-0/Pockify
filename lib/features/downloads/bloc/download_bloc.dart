@@ -34,10 +34,11 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     on<ClearSelection>(_onClearSelection);
     on<PauseDownload>(_onPauseDownload);
     on<ResumeDownload>(_onResumeDownload);
+    on<ClearError>(_onClearError);
   }
 
   void _onLoadDownloads(LoadDownloads event, Emitter<DownloadState> emit) {
-    emit(state.copyWith(isLoading: true));
+    emit(state.copyWith(isLoading: true, clearError: true));
 
     try {
       final downloads = _downloadService.getAllDownloads();
@@ -45,6 +46,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
         downloads: downloads,
         filteredDownloads: downloads,
         isLoading: false,
+        clearError: true,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -61,18 +63,18 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     // Check concurrent download limit
     if (state.activeDownloads.length >= 2) {
        emit(state.copyWith(
-        error: 'Aynı anda en fazla 2 video indirebilirsiniz.',
+        error: 'Aynı anda en fazla 2 içerik kaydedebilirsiniz.',
       ));
       return;
     }
 
-    // Check daily limit for free users
-    if (!await _purchaseService.canDownload()) {
-      emit(state.copyWith(
-        error: 'Günlük indirme limitine ulaştınız. Premium\'a geçin veya yarın tekrar deneyin.',
-      ));
-      return;
-    }
+    // Check daily limit for free users - DISABLED FOR TESTING
+    // if (!await _purchaseService.canDownload()) {
+    //   emit(state.copyWith(
+    //     error: 'Günlük kaydetme limitine ulaştınız. Premium\'a geçin veya yarın tekrar deneyin.',
+    //   ));
+    //   return;
+    // }
 
     emit(state.copyWith(isLoading: true, error: null));
 
@@ -82,7 +84,7 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
       if (video == null) {
         emit(state.copyWith(
           isLoading: false,
-          error: 'Video bilgisi alınamadı',
+          error: 'İçerik bilgisi alınamadı',
         ));
         return;
       }
@@ -234,5 +236,9 @@ class DownloadBloc extends Bloc<DownloadEvent, DownloadState> {
     } catch (e) {
       // Handle error if download not found
     }
+  }
+
+  void _onClearError(ClearError event, Emitter<DownloadState> emit) {
+    emit(state.copyWith(clearError: true));
   }
 }

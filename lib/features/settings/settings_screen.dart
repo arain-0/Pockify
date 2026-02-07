@@ -67,11 +67,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _buildPremiumBanner(),
           const SizedBox(height: 20),
-          _buildSectionHeader('Indirme Ayarlari'),
+          _buildSectionHeader('Kaydetme Ayarları'),
           _buildSwitchTile(
             Icons.wifi,
-            'Sadece Wi-Fi ile Indir',
-            'Mobil veri kullanilmaz',
+            'Sadece Wi-Fi ile Kaydet',
+            'Mobil veri kullanılmaz',
             _wifiOnlyDownload,
             (value) {
               setState(() => _wifiOnlyDownload = value);
@@ -90,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _fileHelper.formatFileSize(_storageUsed),
           ),
           const SizedBox(height: 20),
-          _buildSectionHeader('Gorunum'),
+          _buildSectionHeader('Görünüm'),
           _buildSelectTile(
             Icons.palette_outlined,
             'Tema',
@@ -188,8 +188,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   isPremium
-                      ? 'Sinirsiz indirme keyfi'
-                      : 'Bugun kalan: $remaining indirme',
+                      ? 'Sınırsız içerik yönetimi'
+                      : 'Bugün kalan: $remaining kaydetme hakkı',
                   style: TextStyle(
                     color: isPremium
                         ? Colors.white.withValues(alpha: 0.8)
@@ -461,7 +461,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: const Text(
-          'Tum indirilen videolar ve ayarlar silinecek. Bu islem geri alinamaz.',
+          'Tüm kaydedilen içerikler ve ayarlar silinecek. Bu işlem geri alınamaz.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -477,7 +477,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Tum veriler temizlendi'),
+                  content: Text('Tüm veriler temizlendi'),
                   backgroundColor: AppColors.success,
                 ),
               );
