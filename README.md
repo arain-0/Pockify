@@ -4,12 +4,10 @@ Save your favorite social media content. Access anytime.
 
 > **Note:** This project is still under development.
 
-## Screenshots
+## Preview
 
 <p align="center">
-  <img src="screenshots/splash.png" width="200" />
-  <img src="screenshots/home.png" width="200" />
-  <img src="screenshots/settings.png" width="200" />
+  <img src="screenshots/preview.png" width="600" />
 </p>
 
 ## Features
