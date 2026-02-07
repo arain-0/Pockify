@@ -1,10 +1,10 @@
 # Pockify
 
-Sosyal medya içeriklerini kaydet, her zaman eriş.
+Save your favorite social media content. Access anytime.
 
-> **Not:** Bu proje henüz geliştirme aşamasındadır.
+> **Note:** This project is still under development.
 
-## Ekran Görüntüleri
+## Screenshots
 
 <p align="center">
   <img src="screenshots/splash.png" width="200" />
@@ -12,50 +12,50 @@ Sosyal medya içeriklerini kaydet, her zaman eriş.
   <img src="screenshots/settings.png" width="200" />
 </p>
 
-## Özellikler
+## Features
 
-- TikTok, Instagram, YouTube, Twitter video kaydetme
-- Çevrimdışı izleme
-- Kolay kullanımlı arayüz
-- Premium özellikleri
+- Save videos from TikTok, Instagram, YouTube, Twitter
+- Offline viewing
+- Clean and intuitive UI
+- Premium features available
 
-## Desteklenen Platformlar
+## Supported Platforms
 
-| Platform | Durum |
-|----------|-------|
-| TikTok | Aktif |
-| Instagram | Aktif |
-| YouTube | Aktif |
-| Twitter/X | Aktif |
-| Facebook | Aktif |
-| Reddit | Aktif |
-| Vimeo | Aktif |
+| Platform | Status |
+|----------|--------|
+| TikTok | Active |
+| Instagram | Active |
+| YouTube | Active |
+| Twitter/X | Active |
+| Facebook | Active |
+| Reddit | Active |
+| Vimeo | Active |
 
-## Kurulum
+## Installation
 
 ```bash
-# Bağımlılıkları yükle
+# Install dependencies
 flutter pub get
 
-# Uygulamayı çalıştır
+# Run the app
 flutter run
 ```
 
-## API Yapılandırması
+## API Configuration
 
-`lib/core/config/api_config.dart` dosyasında RapidAPI key'inizi ayarlayın:
+Set your RapidAPI key in `lib/core/config/api_config.dart`:
 
 ```dart
 static const String rapidApiKey = 'YOUR_RAPIDAPI_KEY';
 ```
 
-## Teknolojiler
+## Tech Stack
 
 - Flutter
 - BLoC State Management
 - Hive (Local Storage)
 - Dio (HTTP Client)
 
-## Lisans
+## License
 
 MIT License
